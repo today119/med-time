@@ -139,7 +139,7 @@ details{margin:6px 0}summary{cursor:pointer;font-weight:700}
       <b>입안</b>
       <ul style="margin:6px 0;padding-left:18px">
         <li>🔄 <b>11/4 빈멕 재진: 수포란으로 입안도 세척</b> — 입안·혀에 뿌리거나 거즈에 묻혀 살살 닦고, <b>삼키지 말고 뱉기</b></li>
-        <li>식후마다 식염수 적신 거즈로 살살 닦기</li>
+        <li>식후마다 + 자기 전 <b>수포란 가글</b> → 뱉기 (11/2엔 식염수 거즈)</li>
         <li>아파서 못 먹으면 약국에서 <b>Kamistad-Baby gel</b> → 밥 10~15분 전 헌 곳에 얇게</li>
       </ul>
     </div>
@@ -212,6 +212,8 @@ const MEDS = {
        how:['매일 <b>아침 10mL</b>']},
   sup:{nm:'수포란 소독', ds:'입술·딱지에 뿌리고 톡톡', c:'--c7', full:'Suporan Spray 100ml (약국 구입)', use:'상처 소독액 — 살균·항바이러스',
        how:['하루 3번 — 아침·오후·저녁','뿌리고 → 거즈로 톡톡 → 반복 → 마지막에 뿌려 30초~1분 말리기','<b>입안도 세척</b> (11/4 빈멕 재진 — 삼키지 말고 뱉기)','자세한 순서는 「열·관리」 탭']},
+  gar:{nm:'수포란 입안 가글', ds:'입안 헹구고 뱉기', c:'--c7', full:'Suporan (입안 세척 · 11/4 빈멕 재진)', use:'입안 헌 곳 세척 — 살균·항바이러스',
+       how:['11/4부터 — 하루 4번: 아침·점심·저녁 먹고 + 자기 전','입안에 뿌리거나 조금 머금고 <b>살살 헹군 뒤 뱉기</b> (삼키지 않기)','따가우면 거즈에 묻혀 헌 곳을 톡톡','가글 후 15~30분은 먹고 마시지 않기']},
   mup:{nm:'무피로신 연고', ds:'소독 후 입술에 얇게', c:'--c3', full:'Mupirocin 2% (Bacterocin)', use:'항생제 연고 — 입술 고름 딱지',
        how:['소독하고 물기 닦은 뒤','입술과 고름 딱지에 <b>얇게</b>','하루 2번 — 아침·저녁','면봉으로 바르기 (손가락·튜브 입구 닿지 않게)']},
   chk:{nm:'온몸·눈 확인', ds:'붉은 반점·물집·눈 충혈 없나', c:'--c5', full:'약물 부작용 확인', use:'', how:[]},
@@ -229,7 +231,7 @@ const FIRST = [ // 11/2 (12시부터 시작)
 const DAILY = [
   {t:'07:00', it:['acy']},
   {t:'08:00', it:['aug','ana','imm','sup','mup'], note:'아침 먹으면서 오구멘틴 → 식후 소독·연고'},
-  {t:'12:00', it:['acy'], note:'점심 후 입안 식염수 거즈로 닦기'},
+  {t:'12:00', it:['acy'], note:'점심 먹고 수포란 입안 가글 (11/4부터)'},
   {t:'15:00', it:['sup']},
   {t:'17:00', it:['acy']},
   {t:'18:00', it:['aug','ana','sup','mup'], note:'저녁 먹으면서 오구멘틴 → 식후 소독·연고'},
@@ -243,7 +245,12 @@ const pad = n => String(n).padStart(2,'0');
 const hm = t => {const d=new Date(t);return pad(d.getHours())+':'+pad(d.getMinutes());};
 const ds = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 function dayDate(i){ const d=new Date(DAY0+'T00:00:00'); d.setDate(d.getDate()+i); return d; }
-function basePlan(i){ return i<7 ? (i===0 ? FIRST : DAILY) : []; }
+const GAR_FROM=2, GAR_T=['08:00','12:00','18:00','22:00']; // 11/4 빈멕 재진: 수포란 입안 가글
+function basePlan(i){
+  const B = i<7 ? (i===0 ? FIRST : DAILY) : [];
+  if(i<GAR_FROM || !B.length) return B;
+  return B.map(x=>({...x, it: GAR_T.includes(x.t) ? [...x.it,'gar'] : [...x.it]}));
+}
 const dIdx = s => Math.round((new Date(s+'T00:00:00')-new Date(DAY0+'T00:00:00'))/864e5);
 function nd(){ let n=NDAYS; for(const id in custom){ const c=custom[id]; n=Math.max(n, dIdx(c.d0)+c.n); } return Math.min(n,60); }
 function MM(m){ if(MEDS[m]) return MEDS[m]; const c=custom[m]; return c ? {nm:c.nm, ds:c.ds||'', c:c.c||'--c7'} : {nm:'(지운 약)', ds:'', c:'--c5'}; }
@@ -381,7 +388,7 @@ function renderNext(){
 }
 function renderMeds(){
   let h='<h2>💊 빈멕 처방약</h2>';
-  ['acy','aug','mup','ana','hap','imm','sup'].forEach(m=>{
+  ['acy','aug','mup','ana','hap','imm','sup','gar'].forEach(m=>{
     const M=MEDS[m];
     h+=`<div class="med" style="border-color:var(${M.c})"><div class="h">${M.nm} <small>${M.full}</small></div><div class="sub">${M.use}</div><ul>${M.how.map(x=>'<li>'+x+'</li>').join('')}</ul></div>`;
   });
