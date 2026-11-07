@@ -94,6 +94,10 @@ details{margin:6px 0}summary{cursor:pointer;font-weight:700}
 
   <!-- ── 약 설명 ── -->
   <section class="view" id="v-meds">
+    <div class="card stop" style="border-color:#2b8a3e">
+      <h2>🩺 11/7 한국 소아과 진료로 바뀜</h2>
+      <p style="margin:6px 0 0">• <b>오구멘틴(항생제) 그만</b> — 11/7 아침까지 먹음<br>• 빈멕 아시클로버 그만 → <b>이비인후과에서 받은 항바이러스제</b>로 바꿔 먹기 (둘 같이 ❌)<br>• 진단: 헤르페스 구내염 + 농가진</p>
+    </div>
     <div class="card stop">
       <h2>🛑 한국에서 받은 약은 모두 중단</h2>
       <div class="sub">빈멕 의사 지시 — 7가지 모두 먹이지 않기</div>
@@ -246,10 +250,14 @@ const hm = t => {const d=new Date(t);return pad(d.getHours())+':'+pad(d.getMinut
 const ds = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 function dayDate(i){ const d=new Date(DAY0+'T00:00:00'); d.setDate(d.getDate()+i); return d; }
 const GAR_FROM=2, GAR_T=['08:00','12:00','18:00','22:00']; // 11/4 빈멕 재진: 수포란 입안 가글
+// 11/7 한국 소아과: 오구멘틴 중단, 빈멕 아시클로버 → 이비인후과 항바이러스제로 교체
+const STOP={aug:'2026-11-07 12:00', acy:'2026-11-07 12:00'};
 function basePlan(i){
   const B = i<7 ? (i===0 ? FIRST : DAILY) : [];
-  if(i<GAR_FROM || !B.length) return B;
-  return B.map(x=>({...x, it: GAR_T.includes(x.t) ? [...x.it,'gar'] : [...x.it]}));
+  if(!B.length) return B;
+  const day=ds(dayDate(i));
+  return B.map(x=>({...x, it: [...x.it, ...(i>=GAR_FROM && GAR_T.includes(x.t) ? ['gar'] : [])]
+    .filter(m=>!STOP[m] || day+' '+x.t < STOP[m])})).filter(x=>x.it.length);
 }
 const dIdx = s => Math.round((new Date(s+'T00:00:00')-new Date(DAY0+'T00:00:00'))/864e5);
 function nd(){ let n=NDAYS; for(const id in custom){ const c=custom[id]; n=Math.max(n, dIdx(c.d0)+c.n); } return Math.min(n,60); }
